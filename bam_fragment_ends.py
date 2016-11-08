@@ -49,7 +49,7 @@ def plot_ends(df, figurename):
 
 def main():
     if len(sys.argv) != 3:
-        sys.exit('[usage] python <bamfile> <outprefix>')
+        sys.exit('[usage] python %s <bamfile> <outprefix>' %(sys.argv[0]))
 
     positions_consider = 20
     end_nucleotide_dict = defaultdict(lambda : defaultdict(lambda : defaultdict(int)))

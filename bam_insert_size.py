@@ -1,7 +1,7 @@
 #!/bin/env python
 
-import matplotlib
-matplotlib.use('Agg')
+from matplotlib import use
+use('Agg')
 import pylab as plt
 import numpy as np
 import pysam
@@ -37,21 +37,22 @@ def percetileDF(d):
 def plot(df, figurename):
     with sns.plotting_context('paper',font_scale=1.4):
         p = sns.FacetGrid(data = df, col = 'samplename', col_wrap = 4, sharey=False)
-        p.map(plt.bar,'isize','counts')
-        p.set_titles('{col_name}')
-        p.set_xticklabels(rotation=60)
+    p.map(plt.bar,'isize','counts')
+    p.set_titles('{col_name}')
+    p.set_xticklabels(rotation=60)
 	p.fig.text(x=0, y=0.7, s='Normalized Count', rotation=90)
-        p.fig.text(x=0.5, y = 0, s='Fragment Size (nt)')
-        p.savefig(figurename)
+    p.fig.text(x=0.5, y = 0, s='Fragment Size (nt)')
+    p.savefig(figurename)
     print 'plotted %s' %figurename
     return 0
 
 def main():
-    projectpath = '/stor/work/Lambowitz/cdw2854/plasmaDNA'
-    datapath = projectpath + '/bamFiles'
-    figurepath = projectpath + '/figures'
+    if len(sys.argv) != 2:
+        sys.exit('[usage] python %s <bam_path>' %(sys.argv[0]))
+    datapath = sys.argv[1]
+    figurepath = datapath + '/figures'
     if not os.path.isdir(figurepath):
-        os.mkdir(figurepath) 
+        os.mkdir(figurepath)
     figurename = figurepath + '/insertSize.png'
     tablename = figurename.replace('.png','.tsv')
     bamFiles = glob.glob(datapath + '/P*.bam')

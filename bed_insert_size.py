@@ -4,8 +4,6 @@ import matplotlib
 matplotlib.use('Agg')
 import pylab as plt
 import numpy as np
-import pysam
-from pybedtools import BedTool
 import seaborn as sns
 import glob
 import pandas as pd
@@ -13,10 +11,17 @@ import os
 from multiprocessing import Pool
 sns.set_style('white')
 
+def get_length(fragment):
+    fields = fragment.split('\t')
+    start, end = map(long, [fields[1], fields[2]])
+    return abs(end - start)
+
+
 def parse_bed(bed_file):
     samplename = os.path.basename(bed_file).split('.')[0]
     print 'Extracting %s' %samplename
-    fragSize = np.array([fragment.fields[4] for fragment in BedTool(bed_file)],dtype=np.int64)
+    with open(bed_file,'r') as bed:
+        fragSize = np.array([get_length(fragment) for fragment in bed],dtype=np.int64)
     fragSize = fragSize[fragSize<500]
     fragSize, count = np.unique(fragSize, return_counts=True)
     df = pd.DataFrame({'isize': fragSize, 'counts':count})
@@ -39,13 +44,13 @@ def plot(df, figurename):
     return 0
 
 def main():
-    projectpath = '/scratch/02727/cdw2854/plasma_project'
-    projectpath = '/scratch/02727/cdw2854/jurkatCells'
-    datapath = projectpath + '/bedFiles'
+    if len(sys.argv) != 3:
+        sys.exit('[usage] python %s <threads> <bed_path>' %(sys.argv[0]))
+    datapath = sys.argv[1]
     figurepath = datapath
     figurename = figurepath + '/insertSize.png'
     bed_files = glob.glob(datapath + '/*bed')
-    dfs = Pool(24).map_async(parse_bed, bed_files).get()
+    dfs = Pool(int(sys.argv[2])).map_async(parse_bed, bed_files).get()
     df = pd.concat(dfs).\
             groupby(['samplename','isize'])\
             .sum()\
