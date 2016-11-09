@@ -60,7 +60,9 @@ def main():
     positions = range(positions_consider)
     with pysam.Samfile(bam_file,'rb') as bam:
         for count, aln in enumerate(bam):
-            if not aln.is_unmapped and not aln.is_supplementary:
+            condition_1 = (not aln.is_unmapped and not aln.is_supplementary)
+            condition_2 = (not aln.is_duplicate and aln.mapping_quality > 1)
+            if condition_1 and condition_2:
                 sequence = str(aln.query_alignment_sequence)
                 sequence = sequence if not aln.is_reverse else reverse_complement(sequence)
                 read = "5'" if aln.is_read1 else "3'"
