@@ -47,31 +47,36 @@ def plot_ends(df, figurename):
     return 0
 
 
+def extract_nucleotides(bam, positions_consider):
+    end_nucleotide_dict = defaultdict(lambda : defaultdict(lambda : defaultdict(int)))
+    positions = range(positions_consider)
+    for count, aln in enumerate(bam):
+        condition_1 = (not aln.is_unmapped and not aln.is_supplementary)
+        condition_2 = (not aln.is_duplicate and aln.mapping_quality > 1)
+        if condition_1 and condition_2:
+            sequence = str(aln.query_alignment_sequence)
+            sequence = sequence if not aln.is_reverse else reverse_complement(sequence)
+            read = "5'" if aln.is_read1 else "3'"
+            sequence = sequence[:positions_consider] if aln.is_read1 else sequence[:positions_consider]
+            sequence = sequence.translate(complement)[::-1] if aln.is_read2 else sequence
+            for pos, base in izip(positions, sequence):
+                end_nucleotide_dict[read][pos][base] += 1
+        if count % 10000000 == 0:
+            print 'Parsed %i alignments' %(count)
+    return end_nucleotide_dict
+
+
 def main():
     if len(sys.argv) != 3:
         sys.exit('[usage] python %s <bamfile> <outprefix>' %(sys.argv[0]))
 
     positions_consider = 20
-    end_nucleotide_dict = defaultdict(lambda : defaultdict(lambda : defaultdict(int)))
     bam_file = sys.argv[1]
     outprefix = sys.argv[2]
     figurename = outprefix + '.pdf'
     tablename = outprefix + '.csv'
-    positions = range(positions_consider)
     with pysam.Samfile(bam_file,'rb') as bam:
-        for count, aln in enumerate(bam):
-            condition_1 = (not aln.is_unmapped and not aln.is_supplementary)
-            condition_2 = (not aln.is_duplicate and aln.mapping_quality > 1)
-            if condition_1 and condition_2:
-                sequence = str(aln.query_alignment_sequence)
-                sequence = sequence if not aln.is_reverse else reverse_complement(sequence)
-                read = "5'" if aln.is_read1 else "3'"
-                sequence = sequence[:positions_consider] if aln.is_read1 else sequence[:positions_consider]
-                sequence = sequence.translate(complement)[::-1] if aln.is_read2 else sequence
-                for pos, base in izip(positions, sequence):
-                    end_nucleotide_dict[read][pos][base] += 1
-            if count % 10000000 == 0:
-                print 'Parsed %i alignments' %(count)
+        end_nucleotide_dict = extract_nucleotides(bam)
     df = pd.concat([make_dataframe(end_nucleotide_dict, end) for end in ["5'","3'"]])
     plot_ends(df, figurename)
     df.to_csv(tablename, index=False)
