@@ -76,13 +76,12 @@ def main():
     figurename = outprefix + '.pdf'
     tablename = outprefix + '.csv'
     with pysam.Samfile(bam_file,'rb') as bam:
-        end_nucleotide_dict = extract_nucleotides(bam)
+        end_nucleotide_dict = extract_nucleotides(bam, positions_consider)
     df = pd.concat([make_dataframe(end_nucleotide_dict, end) for end in ["5'","3'"]])
     plot_ends(df, figurename)
     df.to_csv(tablename, index=False)
     print 'Written %s' %tablename
     return 0
-
 
 
 if __name__ == '__main__':
