@@ -9,6 +9,7 @@ import seaborn as sns
 import glob
 import pandas as pd
 import os
+import sys
 from multiprocessing import Pool
 sns.set_style('white')
 
@@ -40,7 +41,7 @@ def plot(df, figurename):
     p.map(plt.bar,'isize','counts')
     p.set_titles('{col_name}')
     p.set_xticklabels(rotation=60)
-	p.fig.text(x=0, y=0.7, s='Normalized Count', rotation=90)
+    p.fig.text(x=0, y=0.7, s='Normalized Count', rotation=90)
     p.fig.text(x=0.5, y = 0, s='Fragment Size (nt)')
     p.savefig(figurename)
     print 'plotted %s' %figurename
@@ -55,7 +56,7 @@ def main():
         os.mkdir(figurepath)
     figurename = figurepath + '/insertSize.png'
     tablename = figurename.replace('.png','.tsv')
-    bamFiles = glob.glob(datapath + '/P*.bam')
+    bamFiles = glob.glob(datapath + '/*.bam')
     p = Pool(24)
     dfs = p.map(parseBam, bamFiles)
     df = pd.concat(dfs)\
