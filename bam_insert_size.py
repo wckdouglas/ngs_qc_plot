@@ -50,13 +50,23 @@ def plot(df, figurename):
 def main():
     if len(sys.argv) != 2:
         sys.exit('[usage] python %s <bam_path>' %(sys.argv[0]))
+
     datapath = sys.argv[1]
+    if not os.path.isdir(datapath):
+        sys.exit('[usage] python %s <bam_path>' %(sys.argv[0])+\
+                '[ERROR] %s is not a directory' %datapath)
+
     figurepath = datapath + '/figures'
     if not os.path.isdir(figurepath):
         os.mkdir(figurepath)
+
     figurename = figurepath + '/insertSize.png'
     tablename = figurename.replace('.png','.tsv')
     bamFiles = glob.glob(datapath + '/*.bam')
+
+    if len(bamFiles) == 0:
+        sys.exit('[ERROR] No bam files in %s' %datapath)
+
     p = Pool(24)
     dfs = p.map(parseBam, bamFiles)
     df = pd.concat(dfs)\
