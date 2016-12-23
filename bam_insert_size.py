@@ -1,15 +1,18 @@
 #!/bin/env python
 
+import sys
+if len(sys.argv) != 2:
+    sys.exit('[usage] python %s <bam_path>' %(sys.argv[0]))
+
 from matplotlib import use
 use('Agg')
-import pylab as plt
+import matplotlib.pyplot as plt
 import numpy as np
 import pysam
 import seaborn as sns
 import glob
 import pandas as pd
 import os
-import sys
 from multiprocessing import Pool
 sns.set_style('white')
 
@@ -40,6 +43,7 @@ def plot(df, figurename):
         p = sns.FacetGrid(data = df, col = 'samplename', col_wrap = 4, sharey=False)
     p.map(plt.bar,'isize','counts')
     p.set_titles('{col_name}')
+    p.set(xlim=(0,1000))
     p.set_xticklabels(rotation=60)
     p.fig.text(x=0, y=0.7, s='Normalized Count', rotation=90)
     p.fig.text(x=0.5, y = 0, s='Fragment Size (nt)')
@@ -48,8 +52,6 @@ def plot(df, figurename):
     return 0
 
 def main():
-    if len(sys.argv) != 2:
-        sys.exit('[usage] python %s <bam_path>' %(sys.argv[0]))
 
     datapath = sys.argv[1]
     if not os.path.isdir(datapath):
@@ -79,6 +81,7 @@ def main():
     p.close()
     p.join()
     df.to_csv(tablename,sep='\t',index=False)
+    df = pd.read_table(tablename)
     plot(df, figurename)
     return 0
 
