@@ -11,6 +11,7 @@ import pandas as pd
 import string
 from itertools import izip
 import sys
+import re
 
 complement = string.maketrans('ACTGN','TGACN')
 def reverse_complement(seq):
@@ -29,9 +30,10 @@ def make_dataframe(nucleotide_dict, end):
                 value_name = 'base_count', var_name='base')\
         .groupby(['read_end','positions']) \
         .apply(norm_data) \
-        .reset_index() \
+        .reset_index()\
         .fillna(0) \
-        .query('base != "N"')
+        .query('base != "N"')\
+        .drop('index',axis=1)
 
 def plot_ends(df, figurename):
     with sns.plotting_context('paper',font_scale = 1.2), \
@@ -47,18 +49,24 @@ def plot_ends(df, figurename):
     return 0
 
 
+def good_cigar(cigar):
+    cigar = str(cigar)
+    return re.findall('[MHSID]',cigar) == ['M']
+
+
 def extract_nucleotides(bam, positions_consider):
-    end_nucleotide_dict = defaultdict(lambda : defaultdict(lambda : defaultdict(int)))
+    end_nucleotide_dict = defaultdict(lambda: defaultdict(lambda: defaultdict(int)))
     positions = range(positions_consider)
     for count, aln in enumerate(bam):
         condition_1 = (not aln.is_unmapped and not aln.is_supplementary)
         condition_2 = (not aln.is_duplicate and aln.mapping_quality > 1)
-        if condition_1 and condition_2:
-            sequence = str(aln.query_alignment_sequence)
+        condition_3 = good_cigar(aln.cigarstring)
+        if condition_1 and condition_2 and condition_3:
+            #sequence = str(aln.query_alignment_sequence)
+            sequence = str(aln.query_sequence)
             sequence = sequence if not aln.is_reverse else reverse_complement(sequence)
             read = "5'" if aln.is_read1 else "3'"
-            sequence = sequence[:positions_consider] if aln.is_read1 else sequence[:positions_consider]
-            sequence = sequence.translate(complement)[::-1] if aln.is_read2 else sequence
+            sequence = sequence[:positions_consider] if aln.is_read1 else reverse_complement(sequence[:positions_consider])
             for pos, base in izip(positions, sequence):
                 end_nucleotide_dict[read][pos][base] += 1
         if count % 10000000 == 0:

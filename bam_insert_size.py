@@ -1,20 +1,15 @@
+
 #!/bin/env python
 
 import sys
-if len(sys.argv) != 2:
-    sys.exit('[usage] python %s <bam_path>' %(sys.argv[0]))
+if len(sys.argv) != 3:
+    sys.exit('[usage] python %s <bam_file> <out_file>' %(sys.argv[0]))
 
-from matplotlib import use
-use('Agg')
-import matplotlib.pyplot as plt
 import numpy as np
 import pysam
-import seaborn as sns
 import glob
 import pandas as pd
 import os
-from multiprocessing import Pool
-sns.set_style('white')
 
 def filter_align(aln):
     if aln.is_proper_pair and not aln.is_secondary \
@@ -30,59 +25,21 @@ def parseBam(bamFile):
         fragSize = np.abs([filter_align(aln) for aln in bam])
     fragSize = fragSize[fragSize>20]
     fragSize, count = np.unique(fragSize, return_counts=True)
-    df = pd.DataFrame({'isize': fragSize, 'counts':count})
-    df['samplename'] = samplename
+    df = pd.DataFrame({'isize': fragSize, 'counts':count}) \
+        .assign(percentage = lambda d: np.true_divide(d['counts'], d['counts'].sum())) \
+        .assign(samplename = samplename)
     return df
 
-def percetileDF(d):
-    d['counts'] = np.true_divide(d['counts'],np.max(d['counts']))
-    return d
-
-def plot(df, figurename):
-    with sns.plotting_context('paper',font_scale=1.4):
-        p = sns.FacetGrid(data = df, col = 'samplename', col_wrap = 4, sharey=False)
-    p.map(plt.bar,'isize','counts')
-    p.set_titles('{col_name}')
-    p.set(xlim=(0,1000))
-    p.set_xticklabels(rotation=60)
-    p.fig.text(x=0, y=0.7, s='Normalized Count', rotation=90)
-    p.fig.text(x=0.5, y = 0, s='Fragment Size (nt)')
-    p.savefig(figurename)
-    print 'plotted %s' %figurename
-    return 0
 
 def main():
-
-    datapath = sys.argv[1]
-    if not os.path.isdir(datapath):
-        sys.exit('[usage] python %s <bam_path>' %(sys.argv[0])+\
+    bam_file = sys.argv[1]
+    out_file = sys.argv[2]
+    if not os.path.isfile(bam_file):
+        sys.exit('[usage] python %s <bam_file> <out_file>' %(sys.argv[0])+\
                 '[ERROR] %s is not a directory' %datapath)
 
-    figurepath = datapath + '/figures'
-    if not os.path.isdir(figurepath):
-        os.mkdir(figurepath)
-
-    figurename = figurepath + '/insertSize.png'
-    tablename = figurename.replace('.png','.tsv')
-    bamFiles = glob.glob(datapath + '/*.bam')
-
-    if len(bamFiles) == 0:
-        sys.exit('[ERROR] No bam files in %s' %datapath)
-
-    p = Pool(24)
-    dfs = p.map(parseBam, bamFiles)
-    df = pd.concat(dfs)\
-        .groupby(['samplename','isize'])\
-	.agg({'counts':np.sum})\
-        .reset_index()\
-        .groupby(['samplename'])\
-        .apply(percetileDF)\
-        .reset_index()
-    p.close()
-    p.join()
-    df.to_csv(tablename,sep='\t',index=False)
-    df = pd.read_table(tablename)
-    plot(df, figurename)
+    df = parseBam(bam_file)
+    df.to_csv(out_file,sep='\t',index=False)
     return 0
 
 
