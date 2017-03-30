@@ -8,15 +8,23 @@ import pandas as pd
 def get_number(line):
     return [int(line.split(' ')[0])]
 
+def get_line(lines, keyword):
+    return_line = ''
+    for line in lines:
+        if keyword in line:
+            return_line += line 
+    return return_line
+
+
 def parse_stat(stat_file):
     samplename = os.path.basename(stat_file)
     info = open(stat_file,'r').readlines()
     stat_df = pd.DataFrame()
-    stat_df['duplicates'] = get_number(info[3])
-    stat_df['trimmed reads'] = get_number(info[5])
-    stat_df['mapped'] = get_number(info[4])
-    stat_df['supplementary'] = get_number(info[1])
-    stat_df['proper pair'] = get_number(info[8])
+    stat_df['duplicates'] = get_number(get_line(info, 'duplicates'))
+    stat_df['trimmed reads'] = get_number(get_line(info, 'read1'))
+    stat_df['mapped'] = get_number(get_line(info, 'mapped'))
+    stat_df['supplementary'] = get_number(get_line(info, 'supplementary'))
+    stat_df['proper pair'] = get_number(get_line(info, 'properly paired'))
     stat_df['samplename'] = samplename
     return stat_df
     
