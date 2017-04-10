@@ -1,14 +1,18 @@
 #!/bin/env python
 
-import matplotlib
-matplotlib.use('Agg')
-import pylab as plt
+from matplotlib import use as mpl_use
+mpl_use('Agg')
+import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 import glob
 import pandas as pd
 import os
+import sys
 from multiprocessing import Pool
+import pyximport
+pyximport.install()
+from parse_bed import parse_bed
 sns.set_style('white')
 
 def get_length(fragment):
@@ -16,17 +20,6 @@ def get_length(fragment):
     start, end = map(long, [fields[1], fields[2]])
     return abs(end - start)
 
-
-def parse_bed(bed_file):
-    samplename = os.path.basename(bed_file).split('.')[0]
-    print 'Extracting %s' %samplename
-    with open(bed_file,'r') as bed:
-        fragSize = np.array([get_length(fragment) for fragment in bed],dtype=np.int64)
-    fragSize = fragSize[fragSize<500]
-    fragSize, count = np.unique(fragSize, return_counts=True)
-    df = pd.DataFrame({'isize': fragSize, 'counts':count})
-    df['samplename'] = samplename
-    return df
 
 def percetileDF(df):
     df['counts'] = np.true_divide(df['counts'],np.sum(df['counts'])) * 100
@@ -45,7 +38,7 @@ def plot(df, figurename):
 
 def main():
     if len(sys.argv) != 3:
-        sys.exit('[usage] python %s <threads> <bed_path>' %(sys.argv[0]))
+        sys.exit('[usage] python %s <bed_path> <threads>' %(sys.argv[0]))
     datapath = sys.argv[1]
     figurepath = datapath
     figurename = figurepath + '/insertSize.png'
@@ -58,6 +51,9 @@ def main():
             .groupby(['samplename'])\
             .apply(percetileDF)\
             .reset_index()
+    tablename = figurename.replace('.png','.tsv')
+    df.to_csv(tablename, index=False, sep='\t')
+    print 'Saved %s' %(tablename)
     plot(df, figurename)
     return 0
 
