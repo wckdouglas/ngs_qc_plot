@@ -64,7 +64,7 @@ def extract_nucleotides(bam, positions_consider):
         if condition_1 and condition_2 and condition_3:
             #sequence = str(aln.query_alignment_sequence)
             read = "5'" if aln.is_read1 else "3'"
-            sequence = str(aln.query_sequence) if read == "5'" else str(aln.query_alignment_sequence)
+            sequence = str(aln.query_sequence) if read == "5'" else str(aln.query_sequence)
             sequence = sequence[:positions_consider] if aln.is_read1 else reverse_complement(sequence[:positions_consider])
             for pos, base in izip(positions, sequence):
                 end_nucleotide_dict[read][pos][base] += 1
