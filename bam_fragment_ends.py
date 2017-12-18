@@ -61,10 +61,10 @@ def extract_nucleotides(bam, positions_consider):
         condition_1 = (not aln.is_unmapped and not aln.is_supplementary)
         condition_2 = (not aln.is_duplicate and aln.mapping_quality > 1)
         condition_3 = good_cigar(aln.cigarstring)
-        if condition_1 and condition_2 and condition_3:
+        if condition_1 and condition_2: # and condition_3:
             #sequence = str(aln.query_alignment_sequence)
             read = "5'" if aln.is_read1 else "3'"
-            sequence = str(aln.query_sequence) if read == "5'" else str(aln.query_alignment_sequence)
+            sequence = str(aln.query_sequence) if read == "5'" else str(aln.query_sequence)
             sequence = sequence if not aln.is_reverse else reverse_complement(sequence)
             sequence = sequence[:positions_consider] if aln.is_read1 else reverse_complement(sequence[:positions_consider])
             for pos, base in izip(positions, sequence):
