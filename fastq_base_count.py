@@ -36,8 +36,6 @@ def norm_count(d):
     d['norm_count'] = np.true_divide(d['count'],np.sum(d['count'])) * 100
     return d
 
-
-
 def main():
     files = sys.argv[1:]
     pool = Pool(24)

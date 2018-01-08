@@ -36,11 +36,16 @@ def make_dataframe(nucleotide_dict, end):
         .drop('index',axis=1)
 
 def plot_ends(df, figurename):
+    positions_consider = df.positions.max()
     with sns.plotting_context('paper',font_scale = 1.2), \
             sns.color_palette("husl", 8):
         p = sns.FacetGrid(data = df, col = 'read_end',
                       hue = 'base', aspect = 1.5)
     p.map(plt.plot, 'positions','base_fraction')
+    xt = range(1, positions_consider + 1, 2)
+    for i, ax in enumerate(p.fig.axes):
+        ax.set_xticks(xt)
+        ax.set_xticklabels(xt, rotation=90)
     p.add_legend()
     p.set_titles('{col_name}')
     p.set_axis_labels('Positions','Fraction')
@@ -85,8 +90,11 @@ def main():
     with pysam.Samfile(bam_file,'rb') as bam:
         end_nucleotide_dict = extract_nucleotides(bam, positions_consider)
     df = pd.concat([make_dataframe(end_nucleotide_dict, end) for end in ["5'","3'"]])
-    plot_ends(df, figurename)
     df.to_csv(tablename, index=False)
+    df = pd.read_csv(tablename) \
+        .assign(positions = lambda d: d.positions + 1)
+    plot_ends(df, figurename)
+    
     print 'Written %s' %tablename
     return 0
 
