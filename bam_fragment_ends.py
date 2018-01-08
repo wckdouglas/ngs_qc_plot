@@ -58,14 +58,14 @@ def extract_nucleotides(bam, positions_consider):
     end_nucleotide_dict = defaultdict(lambda: defaultdict(lambda: defaultdict(int)))
     positions = range(positions_consider)
     for count, aln in enumerate(bam):
-        condition_1 = (not aln.is_unmapped and not aln.is_supplementary)
+        condition_1 = (not aln.is_unmapped and not aln.is_supplementary and not aln.is_secondary)
         condition_2 = (not aln.is_duplicate and aln.mapping_quality > 1)
         condition_3 = good_cigar(aln.cigarstring)
-        if condition_1 and condition_2 and condition_3:
+        if condition_1 and condition_2:# and condition_3:
             #sequence = str(aln.query_alignment_sequence)
             read = "5'" if aln.is_read1 else "3'"
-            sequence = str(aln.query_sequence) if read == "5'" else str(aln.query_sequence)
-            sequence = sequence[:positions_consider] if aln.is_read1 else reverse_complement(sequence[:positions_consider])
+            sequence = str(aln.query_sequence)
+            sequence = sequence[:positions_consider] if not aln.is_reverse else reverse_complement(sequence)[:positions_consider]
             for pos, base in izip(positions, sequence):
                 end_nucleotide_dict[read][pos][base] += 1
         if count % 10000000 == 0:
@@ -77,7 +77,7 @@ def main():
     if len(sys.argv) != 3:
         sys.exit('[usage] python %s <bamfile> <outprefix>' %(sys.argv[0]))
 
-    positions_consider = 20
+    positions_consider = 15
     bam_file = sys.argv[1]
     outprefix = sys.argv[2]
     figurename = outprefix + '.pdf'
