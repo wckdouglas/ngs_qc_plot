@@ -1,5 +1,6 @@
 #!/bin/env python
 
+from __future__ import print_function
 from matplotlib import use as mpl_use
 mpl_use('Agg')
 import matplotlib.pyplot as plt
@@ -33,7 +34,7 @@ def plot(df, figurename):
         p.set(ylabel='Percentage of Reads')
         p.set_titles('{col_name}')
         p.savefig(figurename)
-    print 'plotted %s' %figurename
+    print('plotted %s' %figurename)
     return 0
 
 def main():
@@ -43,7 +44,11 @@ def main():
     figurepath = datapath
     figurename = figurepath + '/insertSize.png'
     bed_files = glob.glob(datapath + '/*bed')
-    dfs = Pool(int(sys.argv[2])).map_async(parse_bed, bed_files).get()
+    bed_files.extend(glob.glob(datapath + '/*bed.gz'))
+    p = Pool(int(sys.argv[2]))
+    dfs = p.map(parse_bed, bed_files)
+    p.close()
+    p.join()
     df = pd.concat(dfs).\
             groupby(['samplename','isize'])\
             .sum()\
@@ -53,7 +58,7 @@ def main():
             .reset_index()
     tablename = figurename.replace('.png','.tsv')
     df.to_csv(tablename, index=False, sep='\t')
-    print 'Saved %s' %(tablename)
+    print('Saved %s' %(tablename))
     plot(df, figurename)
     return 0
 

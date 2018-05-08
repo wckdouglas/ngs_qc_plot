@@ -1,6 +1,7 @@
 from collections import defaultdict
 import pandas as pd
 import os
+from sequencing_tools.io_tools import xopen
 
 cpdef int get_length(str fragment):
     cdef:
@@ -16,11 +17,11 @@ def parse_bed(bed_file):
         str fragment
         int fragment_size
 
-    samplename = os.path.basename(bed_file).split('.')[0]
+    samplename = os.path.basename(bed_file)
     print 'Extracting %s' %samplename
     isize_dict = defaultdict(int)
 
-    with open(bed_file,'r') as bed:
+    with xopen(bed_file,'r') as bed:
         for fragment in bed:
             fragment_size = get_length(fragment)
             isize_dict[fragment_size] += 1
