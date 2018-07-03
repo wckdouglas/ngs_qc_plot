@@ -49,7 +49,7 @@ def main():
     dfs = p.map(parse_bed, bed_files)
     p.close()
     p.join()
-    df = pd.concat(dfs).\
+    df = pd.concat(map(pd.read_csv, dfs)).\
             groupby(['samplename','isize'])\
             .sum()\
             .reset_index()\
@@ -60,6 +60,7 @@ def main():
     df.to_csv(tablename, index=False, sep='\t')
     print('Saved %s' %(tablename))
     plot(df, figurename)
+    [os.remove(f) for f in dfs]
     return 0
 
 if __name__ == '__main__':

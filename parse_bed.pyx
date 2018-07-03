@@ -26,7 +26,10 @@ def parse_bed(bed_file):
             fragment_size = get_length(fragment)
             isize_dict[fragment_size] += 1
 
-    df = pd.DataFrame({'isize': isize_dict.keys(),
-                        'counts':isize_dict.values()})
+    df = pd.DataFrame({'isize': list(isize_dict.keys()),
+                        'counts':list(isize_dict.values())})
     df['samplename'] = samplename
-    return df
+
+    temp_file = bed_file + '_temp'
+    df.to_csv(temp_file, index=False)
+    return temp_file
