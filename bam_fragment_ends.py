@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
 from matplotlib import use
 use('Agg')
 import matplotlib.pyplot as plt
@@ -8,9 +9,9 @@ import numpy as np
 from collections import defaultdict
 import seaborn as sns
 import pandas as pd
-from itertools import izip
 import sys
 import re
+from builtin import zip, range, map
 
 if  sys.version_info >= (3, 0):
     import string
@@ -76,7 +77,7 @@ def extract_nucleotides(bam, positions_consider):
             sequence = str(aln.query_sequence) if read == "5'" else str(aln.query_sequence)
             sequence = sequence if not aln.is_reverse else reverse_complement(sequence)
             sequence = sequence[:positions_consider] if aln.is_read1 else reverse_complement(sequence[:positions_consider])
-            for pos, base in izip(positions, sequence):
+            for pos, base in zip(positions, sequence):
                 end_nucleotide_dict[read][pos][base] += 1
         if count % 10000000 == 0:
             print('Parsed %i alignments' %(count))
