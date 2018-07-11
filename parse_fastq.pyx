@@ -35,8 +35,8 @@ def read_file(filename):
     samplename = os.path.basename(filename)
     seq_dict = defaultdict(lambda: defaultdict(int))
     with xopen(filename, 'r') as fastq:
-        for fastq_count, (name, seq, qual) in enumerate(readfq(fastq)):
-            seq_dict = parse_seq(seq, seq_dict)
+        for fastq_count, fq_record in enumerate(readfq(fastq)):
+            seq_dict = parse_seq(fq_record.seq, seq_dict)
             if fastq_count % 1000000 == 0:
                 print('Parsed: %i records in %s' %(fastq_count, filename))
     df = seq_dict_to_df(seq_dict) \
