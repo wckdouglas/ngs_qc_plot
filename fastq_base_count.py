@@ -29,7 +29,7 @@ def plot_seq(df):
 	p.add_legend()
 	figurename = 'base_count_table.png'
 	p.savefig(figurename)
-	print 'Plotted: %s' %figurename
+	print('Plotted: %s' %figurename)
 
 
 def norm_count(d):
@@ -46,7 +46,7 @@ def main():
     df = pd.read_table(tablename) \
 		.groupby(['position','sample_name'], as_index=False) \
 		.apply(norm_count)
-    print 'Saved: %s' %tablename
+    print('Saved: %s' %tablename)
     plot_seq(df)
     return 0
 

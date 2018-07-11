@@ -13,7 +13,7 @@ import sys
 import re
 from builtins import zip, range, map
 
-if  sys.version_info >= (3, 0):
+if  sys.version_info < (3, 0):
     import string
     complement = string.maketrans('ACTGN','TGACN')
 else:
@@ -81,7 +81,7 @@ def extract_nucleotides(bam, positions_consider):
             else:
                 sequence = sequence[:positions_consider]
 
-            for pos, base in izip(positions, sequence):
+            for pos, base in zip(positions, sequence):
                 end_nucleotide_dict[read][pos][base] += 1
         if count % 10000000 == 0:
             print('Parsed %i alignments' %(count))
