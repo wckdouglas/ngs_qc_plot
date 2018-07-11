@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
 from matplotlib import use
 use('Agg')
 import matplotlib.pyplot as plt
@@ -8,12 +9,16 @@ import numpy as np
 from collections import defaultdict
 import seaborn as sns
 import pandas as pd
-import string
-from itertools import izip
 import sys
 import re
+from builtins import zip, range, map
 
-complement = string.maketrans('ACTGN','TGACN')
+if  sys.version_info < (3, 0):
+    import string
+    complement = string.maketrans('ACTGN','TGACN')
+else:
+    complement = str.maketrans('ACTGN','TGACN')
+
 def reverse_complement(seq):
     return seq.translate(complement)[::-1]
 
@@ -50,7 +55,7 @@ def plot_ends(df, figurename):
     p.set_titles('{col_name}')
     p.set_axis_labels('Positions','Fraction')
     p.savefig(figurename, transparent=True)
-    print 'Written %s ' %figurename
+    print('Written %s ' %figurename)
     return 0
 
 
@@ -70,11 +75,16 @@ def extract_nucleotides(bam, positions_consider):
             #sequence = str(aln.query_alignment_sequence)
             read = "5'" if aln.is_read1 else "3'"
             sequence = str(aln.query_sequence)
-            sequence = sequence[:positions_consider] if not aln.is_reverse else reverse_complement(sequence)[:positions_consider]
-            for pos, base in izip(positions, sequence):
+
+            if aln.is_reverse:
+                sequence = reverse_complement(sequence)[:positions_consider]
+            else:
+                sequence = sequence[:positions_consider]
+
+            for pos, base in zip(positions, sequence):
                 end_nucleotide_dict[read][pos][base] += 1
         if count % 10000000 == 0:
-            print 'Parsed %i alignments' %(count)
+            print('Parsed %i alignments' %(count))
     return end_nucleotide_dict
 
 
@@ -95,7 +105,7 @@ def main():
         .assign(positions = lambda d: d.positions + 1)
     plot_ends(df, figurename)
     
-    print 'Written %s' %tablename
+    print('Written %s' %tablename, file = sys.stdout)
     return 0
 
 
