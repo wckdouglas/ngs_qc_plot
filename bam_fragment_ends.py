@@ -11,7 +11,7 @@ import seaborn as sns
 import pandas as pd
 import sys
 import re
-from builtin import zip, range, map
+from builtins import zip, range, map
 
 if  sys.version_info >= (3, 0):
     import string
