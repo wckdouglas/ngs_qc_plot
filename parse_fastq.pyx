@@ -4,6 +4,7 @@ import pandas as pd
 import sys
 from sequencing_tools.io_tools import xopen
 from sequencing_tools.fastq_tools import readfq
+import six
 
 def parse_seq(sequence, seq_dict):
     cdef:
@@ -17,10 +18,10 @@ def parse_seq(sequence, seq_dict):
 
 def seq_dict_to_df(seq_dict):
     d = []
-    for base, pos_counts in seq_dict.iteritems():
+    for base, pos_counts in six.iteritems(seq_dict):
         d.append(
-                pd.DataFrame({'position':pos_counts.keys(),
-                            'count':pos_counts.values()}) \
+                pd.DataFrame({'position':list(pos_counts.keys()),
+                            'count':list(pos_counts.values())}) \
                     .assign(base = base)
                 )
     return pd.concat(d, axis=0)
