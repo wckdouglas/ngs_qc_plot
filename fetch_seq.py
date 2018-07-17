@@ -7,8 +7,7 @@ from sequencing_tools.fastq_tools import reverse_complement
 
 
 if 3 > len(sys.argv) or len(sys.argv) > 4:
-    print(len(sys.argv))
-    sys.exit('[usage] python %s <fa_file> <chr:start-end> [strand]')
+    sys.exit('[usage] python %s <fa_file> <chr:start-end> [strand]' %sys.argv[0])
 
 fa = sys.argv[1]
 region = sys.argv[2]
