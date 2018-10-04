@@ -18,7 +18,13 @@ except IndexError:
     pass
 region = re.sub(',','', region)
 matches = re.search('(chr[0-9XY]+):([0-9]+)-([0-9]+)', region)
-chrom, start, end = matches.groups()
+if matches:
+    chrom, start, end = matches.groups()
+else:
+    matches = re.search('([0-9XY]+):([0-9]+)-([0-9]+)', region)
+    chrom, start, end = matches.groups()
+
+    
 
 fa = pysam.Fastafile(fa)
 seq = fa.fetch(chrom, int(start), int(end))
