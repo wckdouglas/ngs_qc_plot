@@ -13,12 +13,21 @@ def change_header(header_line):
     return re.sub(seq_length + '$', mod_length, header_line)
 
 def change_alignment(line):
-    seq_start = line.split('\t')[3]
-    mate_start = line.split('\t')[7]
+    fields = line.split('\t')
+
+    seq_start = fields[3]
+    mate_start = fields[7]
     mod_start = str(int(seq_start) + padded)
     mate_mod_start = str(int(mate_start) + padded)
     line =  re.sub('\t' + seq_start + '\t', '\t' + mod_start + '\t', line)
     line =  re.sub('\t' + mate_start + '\t', '\t' + mate_mod_start + '\t', line)
+
+    line = '\t'.join(fields[:3]) 
+    line = line + '\t' + mod_start
+    line = line + '\t' + '\t'.join(fields[4:7])
+    line = line + '\t' + mate_mod_start 
+    line = line + '\t' + '\t'.join(fields[8:])
+
     return line
 
 
