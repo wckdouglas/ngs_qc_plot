@@ -16,10 +16,13 @@ if not args.sheet:
     df.to_excel(writer,'Sheet1')
 
 else:
-    assert(args.sheet in df.columns):
-        for col, col_data in df.groupby(args.sheet):
-            col_data.to_excel(writer, col)
-            print('Written %s' %col)
+    assert(args.sheet in df.columns)
+    for col, col_data in df.groupby(args.sheet):
+        col_data\
+            .reset_index(drop=True)\
+            .to_excel(writer, col)
+        print('Written %s' %col)
+writer.save()
 print('Written %s' %args.excel)
 
 
