@@ -3,6 +3,17 @@
 
 import pandas as pd
 import argparse
+from functools import partial
+
+def read_file_func(csv_file):
+    if csv_file.endswith('feather'):
+        read_func = partial(pd.read_feather)
+    elif csv_file.endswith('tsv'):
+        read_func = partial(pd.read_table)
+    else:
+        read_func = partial(pd.read_csv)
+    return read_func(csv_file)
+
 
 parser = argparse.ArgumentParser(description='Converting csv files to excels, split column into sheets')
 parser.add_argument('--csv', required=True,  help='input csv file')
@@ -10,7 +21,8 @@ parser.add_argument('--excel', required=True, help ='output excel file')
 parser.add_argument('--sheet', default=None, help ='Sheet name, must be a column name in the csv file')
 args = parser.parse_args()
 
-df = pd.read_csv(args.csv)
+
+df = read_file_func(args.csv)
 writer = pd.ExcelWriter(args.excel)
 if not args.sheet:
     df.to_excel(writer,'Sheet1')
