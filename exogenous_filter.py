@@ -21,17 +21,31 @@ def getopt():
     parser.add_argument('-x', '--index',
                         required=True, 
                         help = 'Mitochondrial gnome BWA index')
+    parser.add_argument('--nm',default=0.1, type=float, help='Maximum number of mismatch to tolerate')
     args = parser.parse_args()
     return args
 
 
-matched = re.compile('([0-9]+)M')
-clipped = re.compile('([0-9]+)S')
-def filter_bad_cigar(aln):
-    cigar = aln.cigar
-    clipped_base = sum(map(int, clipped.findall(cigar))) or 0
-    mapped_base = sum(map(int, matched.findall(cigar)))
-    return (float(clipped_base) / mapped_base) < 0.1  and aln.NM < 3
+class exogenous_mapper():
+    def __init__(self, index, nm = 0.1):
+        self.matched = re.compile('([0-9]+)M')
+        self.clipped = re.compile('([0-9]+)S')
+        self.aligner = BwaAligner(index, options = '-k 12 -B 3')
+        self.NM = nm
+        self.aligned=None
+
+    def map(self, seq):
+        self.aligned=None
+        self.aligned = self.aligner.align_seq(seq)
+        self.aligned = list(filter(self.filter_bad_cigar, self.aligned))
+        return 1 if self.aligned else 0
+
+
+    def filter_bad_cigar(self, aln):
+        cigar = aln.cigar
+        clipped_base = sum(map(int, self.clipped.findall(cigar))) or 0
+        mapped_base = sum(map(int, self.matched.findall(cigar)))
+        return ( (float(clipped_base)  + aln.NM)/mapped_base ) <= self.NM
 
 
 
@@ -39,9 +53,9 @@ def main():
     logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
     logger = logging.getLogger('Exogenous filter')
     args = getopt()
-    aligner = BwaAligner(args.index, '-k 12')
     pair = 0
     out_pair =0
+    mapper = exogenous_mapper(args.index, nm = args.nm)
     with pysam.Samfile(args.inbam) as inbam:
         with pysam.Samfile(args.outbam, 'wb', template = inbam) as outbam:
             filter_bam = ''
@@ -58,10 +72,8 @@ def main():
                     seq1 = read1.get_forward_sequence()
                     seq2 = read2.get_forward_sequence()
 
-                    align1 = aligner.align_seq(seq1)
-                    align2 = aligner.align_seq(seq2)
-                    align1 = list(filter(filter_bad_cigar, align1))
-                    align2 = list(filter(filter_bad_cigar, align2))
+                    align1 = mapper.map(seq1)
+                    align2 = mapper.map(seq2)
 
                     if align1 or align2:
                         if filter_bam:
