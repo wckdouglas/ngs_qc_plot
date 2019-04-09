@@ -5,11 +5,22 @@ import sys
 from collections import defaultdict
 from goatools import obo_parser
 
-if len(sys.argv) != 3:
-    sys.exit('[usage] python %s <obo file> <gaf file>' %sys.argv[0])
+def make_go_term_dict(obo):
+    go_terms = obo_parser.OBOReader(sys.argv[1])
+    go_term_dict = {}
+    for go in go_terms:
+        go_term_dict[go.id] = go.name
+        if go.alt_ids:
+            for id in go.alt_ids:
+                go_term_dict[id] = go.name
+    return go_term_dict
 
 
-go_terms = obo_parser.GODag(sys.argv[1])
+if len(sys.argv) != 4:
+    sys.exit('[usage] python %s <obo file> <gaf file> <gmt file>' %sys.argv[0])
+
+
+go_term_dict = make_go_term_dict(sys.argv[1])
 pathways = defaultdict(set)
 with open(sys.argv[2], 'r') as gaf:
     for line in gaf:
@@ -19,14 +30,11 @@ with open(sys.argv[2], 'r') as gaf:
             gene_id = fields[1]
             pathways[GO_id].add(gene_id)
 
-for go_id, genes in pathways.items():
-    try:
-        go_term = go_terms[go_id].name
-    except KeyError:
-        print(go_id)
-        sys.exit()
-    line = go_id + '\t' + go_term + '\t' + '\t'.join(list(genes))
-    print(line)
+with open(sys.argv[3], 'w') as gmt:
+    for go_id, genes in pathways.items():
+        go_term = go_term_dict[go_id]
+        line = go_term + '\t' + go_id + '\t' + '\t'.join(list(genes))
+        print(line, file = gmt)
 
 
 
