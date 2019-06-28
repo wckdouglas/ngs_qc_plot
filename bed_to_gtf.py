@@ -47,5 +47,5 @@ with open(sys.argv[1],'r') as in_bed:
         fields = line.strip().split('\t')
         chrom ,start, end, strand, gene_name, gene_id, gene_type = itemgetter(0,1,2,5,3,7,6)(fields)
         line = make_line(chrom ,start, end, strand, gene_name, gene_id, gene_type)
-        print line
+        print(line)
 
